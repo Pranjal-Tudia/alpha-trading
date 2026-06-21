@@ -4,3 +4,4 @@ pandas
 scikit-learn
 google-generativeai
 gunicorn
+python-dotenv
