@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Algorithmic Trader - Elite</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Ambient Background Glows -->
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
+
+    <div class="app-container">
+        <!-- Minimal Top Bar -->
+        <header class="top-bar">
+            <div class="logo"><i class="fa-solid fa-layer-group" style="color: var(--accent-cyan);"></i> ALPHA TRADING</div>
+            
+            <!-- Paper Trading Wallet -->
+            <div class="paper-wallet">
+                <div class="wallet-stat">
+                    <span class="label">Buying Power</span>
+                    <span class="value" id="wallet-balance">$100,000.00</span>
+                </div>
+                <div class="wallet-stat">
+                    <span class="label">Open P&L</span>
+                    <span class="value pnl-neutral" id="wallet-pnl">$0.00</span>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            
+            <!-- Left Panel: Watchlist -->
+            <section class="watchlist-panel">
+                <div class="panel-header">
+                    <h3>Trending Assets</h3>
+                </div>
+                <ul class="watchlist-list" id="watchlist-list">
+                    <!-- Populated by JS -->
+                </ul>
+            </section>
+
+            <!-- Center Panel: Live Dashboard -->
+            <section class="dashboard panel-section">
+                
+                <!-- Header & Search & Trade Buttons -->
+                <div class="dash-top">
+                    <div class="search-box">
+                        <div class="autocomplete-wrapper">
+                            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                            <input type="text" id="ticker-input" placeholder="Search Company or Ticker..." autocomplete="off" />
+                            <ul id="autocomplete-list" class="autocomplete-items"></ul>
+                        </div>
+                    </div>
+                    
+                    <div class="trade-controls">
+                        <button class="trade-btn buy-btn" id="btn-buy">BUY 10</button>
+                        <button class="trade-btn sell-btn" id="btn-sell">SELL 10</button>
+                    </div>
+                </div>
+
+                <div class="stock-header">
+                    <div class="header-main-left">
+                        <div class="stock-title">
+                            <h3 id="dash-ticker">{{ data.ticker }}</h3>
+                            <div class="signal-badge {% if data.prediction == 'BUY' %}signal-buy{% elif data.prediction == 'SELL' %}signal-sell{% else %}signal-hold{% endif %}" id="dash-signal">
+                                {{ data.prediction }}
+                            </div>
+                        </div>
+                        <p class="date" id="dash-date">{{ data.date }}</p>
+                        <h1 class="massive-price" id="dash-close">${{ "%.2f"|format(data.close) }}</h1>
+                    </div>
+                    <!-- Holdings view -->
+                    <div class="holdings-info" id="holdings-info" style="display:none;">
+                        <span class="hold-label">Your Position</span>
+                        <span class="hold-value" id="hold-amount">10 Shares</span>
+                        <span class="hold-pnl" id="hold-pnl">+$150.00</span>
+                    </div>
+                </div>
+
+                <!-- Mid Section: Chart & Order Book -->
+                <div class="mid-data-area">
+                    <!-- Interactive Chart -->
+                    <div class="card chart-container">
+                        <div class="chart-header">
+                            <div class="timeframes">
+                                <button class="tf-btn" data-days="5">1W</button>
+                                <button class="tf-btn active" data-days="21">1M</button>
+                                <button class="tf-btn" data-days="63">3M</button>
+                                <button class="tf-btn" data-days="252">1Y</button>
+                                <button class="tf-btn" data-days="all">5Y</button>
+                            </div>
+                        </div>
+                        <div class="canvas-wrapper">
+                            <canvas id="priceChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Level-2 Order Book -->
+                    <div class="card order-book-container">
+                        <div class="ob-header">
+                            <span>Price</span>
+                            <span>Size</span>
+                        </div>
+                        <div class="ob-asks" id="ob-asks">
+                            <!-- JS Populated -->
+                        </div>
+                        <div class="ob-spread" id="ob-spread">
+                            $0.01 Spread
+                        </div>
+                        <div class="ob-bids" id="ob-bids">
+                            <!-- JS Populated -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bottom Section: Metrics & News -->
+                <div class="bottom-data-area">
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="label"><i class="fa-solid fa-chart-line"></i> RSI (14D)</span>
+                            <span class="value" id="dash-rsi">{{ "%.2f"|format(data.rsi) }}</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="label"><i class="fa-solid fa-wave-square"></i> SMA (20D)</span>
+                            <span class="value" id="dash-sma">${{ "%.2f"|format(data.sma) }}</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="label"><i class="fa-solid fa-chart-bar"></i> MACD</span>
+                            <span class="value" id="dash-macd">{{ "%.2f"|format(data.macd) }}</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="label"><i class="fa-solid fa-cubes"></i> Volume</span>
+                            <span class="value" id="dash-volume">{{ "{:,}".format(data.volume) }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="card news-feed">
+                        <div class="news-header">
+                            <div class="nh-left">
+                                <i class="fa-regular fa-newspaper"></i> <span>Live News</span>
+                            </div>
+                            <div class="sentiment-gauge">
+                                <span class="label">AI Sentiment:</span>
+                                <span class="badge {% if data.prediction == 'BUY' %}badge-bullish{% elif data.prediction == 'SELL' %}badge-bearish{% else %}badge-neutral{% endif %}" id="dash-sentiment">
+                                    {% if data.prediction == 'BUY' %}BULLISH{% elif data.prediction == 'SELL' %}BEARISH{% else %}NEUTRAL{% endif %}
+                                </span>
+                            </div>
+                        </div>
+                        <ul class="news-list" id="news-list">
+                            {% if data.news %}
+                                {% for n in data.news %}
+                                    <li>
+                                        <a href="{{ n.link }}" target="_blank" class="news-title">{{ n.title }}</a>
+                                        <span class="news-pub">{{ n.publisher }}</span>
+                                    </li>
+                                {% endfor %}
+                            {% else %}
+                                <li><span class="news-title" style="color:#666;">No recent news found.</span></li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+
+            </section>
+
+            <!-- Right Panel: Chatbot -->
+            <section class="chatbot panel-section">
+                <div class="chat-header">
+                    <div class="header-left">
+                        <div class="ai-avatar-header"><i class="fa-solid fa-robot"></i></div>
+                        <h2>Alpha <span class="badge">PRO</span></h2>
+                    </div>
+                    <span class="status-dot"></span>
+                </div>
+                
+                <div class="chat-window" id="chat-window">
+                    <div class="message-wrapper ai-wrapper">
+                        <div class="avatar"><i class="fa-solid fa-robot"></i></div>
+                        <div class="message ai-message">
+                            Greetings. I am Alpha, your dedicated Quantitative Analyst. I've processed the latest algorithmic momentum data for this asset. 📈 What's our next move?
+                        </div>
+                    </div>
+                </div>
+
+                <div class="quick-replies">
+                    <button class="quick-reply-btn">Summarize Risk ⚠️</button>
+                    <button class="quick-reply-btn">Explain RSI 📉</button>
+                    <button class="quick-reply-btn">Why this Signal? 🎯</button>
+                </div>
+                
+                <div class="chat-input-area">
+                    <div class="input-wrapper">
+                        <input type="text" id="chat-input" placeholder="Ask Alpha a question..." />
+                        <button id="send-btn"><i class="fa-solid fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+    
+    <!-- Pass initial chart data to JS -->
+    <script>
+        window.ALL_CHART_DATES = {{ data.chart_dates | tojson }};
+        window.ALL_CHART_PRICES = {{ data.chart_prices | tojson }};
+        window.INITIAL_NEWS = {{ data.news | tojson if data.news else '[]' }};
+    </script>
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
