@@ -7,10 +7,13 @@
     <!-- Fonts and FontAwesome -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- tsParticles -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-preset-triangles@2/tsparticles.preset.triangles.bundle.min.js"></script>
     <style>
         :root {
             --brand-gradient: linear-gradient(135deg, #00f2fe 0%, #4facfe 100%);
-            --bg-color: #050505;
+            --glow-color: rgba(0, 242, 254, 0.3);
+            --bg-color: #000000; /* Pure Black Background */
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { 
@@ -25,36 +28,29 @@
             position: relative;
         }
 
-        /* Animated Background Mesh */
-        .bg-mesh {
+        #tsparticles {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: 
-                radial-gradient(circle at 15% 50%, rgba(79, 172, 254, 0.12), transparent 30%),
-                radial-gradient(circle at 85% 30%, rgba(0, 242, 254, 0.12), transparent 30%);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             z-index: 0;
-            animation: breathe 8s infinite alternate ease-in-out;
-        }
-
-        @keyframes breathe {
-            0% { transform: scale(1); opacity: 0.8; }
-            100% { transform: scale(1.1); opacity: 1; }
         }
 
         /* Glassmorphism Container */
         .auth-container {
             position: relative;
             z-index: 1;
-            background: rgba(18, 18, 24, 0.65);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(10, 10, 15, 0.4);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
             border-radius: 24px;
             padding: 3.5rem 3rem;
             width: 100%;
             max-width: 440px;
             text-align: center;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
+            box-shadow: 0 40px 80px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.05);
             animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             opacity: 0;
             transform: translateY(30px);
@@ -66,7 +62,7 @@
 
         .logo {
             font-family: 'Outfit', sans-serif;
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             font-weight: 800;
             letter-spacing: 2px;
             margin-bottom: 2rem;
@@ -81,6 +77,12 @@
         
         .logo i {
             -webkit-text-fill-color: #00f2fe;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-3px); }
         }
 
         .auth-container h2 { 
@@ -89,11 +91,12 @@
             margin-bottom: 0.5rem; 
             color: #ffffff; 
             font-weight: 700;
+            letter-spacing: -0.5px;
         }
         .auth-container p { 
-            color: rgba(255,255,255,0.6); 
+            color: rgba(255,255,255,0.5); 
             margin-bottom: 2.5rem; 
-            font-size: 1rem;
+            font-size: 0.95rem;
         }
 
         .auth-form { display: flex; flex-direction: column; gap: 1.25rem; }
@@ -108,7 +111,7 @@
             left: 1.2rem;
             top: 50%;
             transform: translateY(-50%);
-            color: rgba(255,255,255,0.4);
+            color: rgba(255,255,255,0.3);
             transition: 0.3s ease;
             z-index: 2;
         }
@@ -116,9 +119,9 @@
         .auth-form input { 
             width: 100%;
             padding: 1.1rem 1rem 1.1rem 3.2rem; 
-            border-radius: 12px; 
-            background: rgba(0,0,0,0.5); 
-            border: 1px solid rgba(255,255,255,0.1); 
+            border-radius: 14px; 
+            background: rgba(255,255,255,0.03); 
+            border: 1px solid rgba(255,255,255,0.05); 
             color: white; 
             font-size: 1rem; 
             font-family: 'Inter', sans-serif;
@@ -130,8 +133,8 @@
         .auth-form input:focus { 
             outline: none; 
             border-color: #4facfe; 
-            background: rgba(0,0,0,0.8);
-            box-shadow: 0 0 0 4px rgba(79, 172, 254, 0.15);
+            background: rgba(255,255,255,0.08);
+            box-shadow: 0 0 15px rgba(79, 172, 254, 0.2);
         }
 
         .auth-form input:focus + i, .auth-form input:focus ~ i {
@@ -139,11 +142,11 @@
         }
 
         .auth-btn { 
-            margin-top: 0.5rem;
+            margin-top: 1rem;
             padding: 1.1rem; 
-            border-radius: 12px; 
+            border-radius: 14px; 
             background: var(--brand-gradient); 
-            color: white; 
+            color: #000; 
             font-weight: 700; 
             font-size: 1.1rem; 
             border: none; 
@@ -151,27 +154,29 @@
             transition: all 0.3s ease; 
             font-family: 'Outfit', sans-serif;
             letter-spacing: 1px;
-            box-shadow: 0 10px 20px rgba(0, 242, 254, 0.2);
+            box-shadow: 0 10px 25px var(--glow-color);
             position: relative;
             overflow: hidden;
         }
 
-        .auth-btn::after {
+        .auth-btn::before {
             content: '';
             position: absolute;
-            top: 0; left: -100%; width: 50%; height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-            transform: skewX(-20deg);
-            transition: 0.5s;
-        }
-        
-        .auth-btn:hover { 
-            transform: translateY(-3px);
-            box-shadow: 0 15px 30px rgba(0, 242, 254, 0.4);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            z-index: -1;
         }
 
-        .auth-btn:hover::after {
-            left: 150%;
+        .auth-btn:hover { 
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(0, 242, 254, 0.5);
+            color: #fff;
+        }
+
+        .auth-btn:hover::before {
+            opacity: 1;
         }
         
         .auth-btn:active {
@@ -181,7 +186,7 @@
         .auth-links { 
             margin-top: 2rem; 
             font-size: 0.95rem; 
-            color: rgba(255,255,255,0.6);
+            color: rgba(255,255,255,0.4);
         }
         .auth-links a { 
             color: #4facfe; 
@@ -191,15 +196,15 @@
         }
         .auth-links a:hover {
             color: #00f2fe;
-            text-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.8);
         }
 
         .flash { 
             background: rgba(248, 113, 113, 0.1);
-            border: 1px solid rgba(248, 113, 113, 0.3);
+            border: 1px solid rgba(248, 113, 113, 0.2);
             color: #fca5a5; 
             padding: 0.8rem;
-            border-radius: 8px;
+            border-radius: 10px;
             font-size: 0.9rem; 
             margin-bottom: 1.5rem; 
             display: flex;
@@ -226,13 +231,14 @@
                 flex-direction: column;
                 justify-content: center;
                 border: none;
-                background: rgba(18, 18, 24, 0.9);
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(10px);
             }
         }
     </style>
 </head>
 <body>
-    <div class="bg-mesh"></div>
+    <div id="tsparticles"></div>
     <div class="auth-container">
         <div class="logo">
             <i class="fas fa-layer-group"></i>
@@ -265,5 +271,30 @@
             <p>Don't have a paper wallet? <a href="{{ url_for('register') }}">Create one</a></p>
         </div>
     </div>
+
+    <script>
+        tsParticles.load("tsparticles", {
+            preset: "triangles",
+            background: {
+                color: "#000000"
+            },
+            particles: {
+                color: { value: "#4facfe" },
+                links: { color: "#00f2fe", opacity: 0.3, distance: 150 },
+                move: { speed: 1.5 },
+                size: { value: 2 },
+                opacity: { value: 0.5 }
+            },
+            interactivity: {
+                events: {
+                    onHover: { enable: true, mode: "grab" },
+                    onClick: { enable: true, mode: "push" }
+                },
+                modes: {
+                    grab: { distance: 200, links: { opacity: 0.8 } }
+                }
+            }
+        });
+    </script>
 </body>
 </html>
