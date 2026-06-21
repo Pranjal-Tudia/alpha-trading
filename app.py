@@ -42,6 +42,10 @@ class PortfolioItem(db.Model):
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+# Create database tables for Gunicorn deployment
+with app.app_context():
+    db.create_all()
+
 # --- GLOBAL VARIABLES & BOT LOGIC ---
 TICKER = 'AAPL'
 LATEST_DATA = {}
@@ -302,7 +306,5 @@ def chat():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all() # Ensure DB is created on boot
     init_trading_bot(TICKER)
     app.run(debug=True, port=5000, host="0.0.0.0")
