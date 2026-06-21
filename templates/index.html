@@ -204,6 +204,24 @@
         </main>
     </div>
     
+    <!-- Trade Confirmation Modal -->
+    <div class="modal-overlay" id="trade-modal" style="display: none;">
+        <div class="modal-content">
+            <h3 id="modal-title">Confirm Trade</h3>
+            <p id="modal-desc">Are you sure you want to execute this trade?</p>
+            <div class="modal-details">
+                <div class="md-row"><span>Asset:</span> <strong id="modal-asset">AAPL</strong></div>
+                <div class="md-row"><span>Action:</span> <strong id="modal-action">BUY 10 Shares</strong></div>
+                <div class="md-row"><span>Price:</span> <strong id="modal-price">$150.00</strong></div>
+                <div class="md-row md-total"><span>Total:</span> <strong id="modal-total">$1,500.00</strong></div>
+            </div>
+            <div class="modal-buttons">
+                <button class="m-btn m-btn-cancel" id="modal-btn-cancel">Cancel</button>
+                <button class="m-btn m-btn-confirm" id="modal-btn-confirm">Confirm Trade</button>
+            </div>
+        </div>
+    </div>
+    
     <!-- Pass initial chart data to JS -->
     <script>
         window.ALL_CHART_DATES = {{ data.chart_dates | tojson }};

@@ -42,6 +42,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Portfolio State
     let walletBalance = 100000.00;
     let portfolio = {}; // format: { 'AAPL': { shares: 10, avgPrice: 150.00 } }
+
+    const savedWallet = localStorage.getItem('alpha_wallet_balance');
+    if (savedWallet !== null) walletBalance = parseFloat(savedWallet);
+    
+    const savedPortfolio = localStorage.getItem('alpha_portfolio');
+    if (savedPortfolio !== null) portfolio = JSON.parse(savedPortfolio);
+
+    function saveWalletState() {
+        localStorage.setItem('alpha_wallet_balance', walletBalance.toString());
+        localStorage.setItem('alpha_portfolio', JSON.stringify(portfolio));
+    }
+    
     const walletBalanceEl = document.getElementById('wallet-balance');
     const walletPnlEl = document.getElementById('wallet-pnl');
     const holdingsInfoEl = document.getElementById('holdings-info');
@@ -75,6 +87,52 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Modal Elements
+    const tradeModal = document.getElementById('trade-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const modalAsset = document.getElementById('modal-asset');
+    const modalAction = document.getElementById('modal-action');
+    const modalPrice = document.getElementById('modal-price');
+    const modalTotal = document.getElementById('modal-total');
+    const modalBtnCancel = document.getElementById('modal-btn-cancel');
+    const modalBtnConfirm = document.getElementById('modal-btn-confirm');
+    
+    let pendingTrade = null;
+
+    modalBtnCancel.addEventListener('click', () => {
+        tradeModal.style.display = 'none';
+        pendingTrade = null;
+    });
+
+    modalBtnConfirm.addEventListener('click', () => {
+        if (!pendingTrade) return;
+        
+        const { type, ticker, price, cost } = pendingTrade;
+        
+        if (type === 'BUY') {
+            walletBalance -= cost;
+            if (!portfolio[ticker]) portfolio[ticker] = { shares: 0, avgPrice: 0 };
+            
+            const pos = portfolio[ticker];
+            const totalCost = (pos.shares * pos.avgPrice) + cost;
+            pos.shares += 10;
+            pos.avgPrice = totalCost / pos.shares;
+            
+            appendMessage(`**EXECUTED:** Bought 10 shares of ${ticker} at $${price.toFixed(2)}.`, 'ai');
+        } else if (type === 'SELL') {
+            walletBalance += cost; // Revenue
+            portfolio[ticker].shares -= 10;
+            if (portfolio[ticker].shares === 0) delete portfolio[ticker];
+            
+            appendMessage(`**EXECUTED:** Sold 10 shares of ${ticker} at $${price.toFixed(2)}.`, 'ai');
+        }
+        
+        saveWalletState();
+        updateWalletUI(price);
+        tradeModal.style.display = 'none';
+        pendingTrade = null;
+    });
+
     // Trade Buttons
     document.getElementById('btn-buy').addEventListener('click', () => {
         const currentTicker = dashTicker.textContent;
@@ -83,18 +141,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const cost = currentPrice * 10;
         if (walletBalance >= cost) {
-            walletBalance -= cost;
-            if (!portfolio[currentTicker]) portfolio[currentTicker] = { shares: 0, avgPrice: 0 };
-            
-            const pos = portfolio[currentTicker];
-            const totalCost = (pos.shares * pos.avgPrice) + cost;
-            pos.shares += 10;
-            pos.avgPrice = totalCost / pos.shares;
-            
-            updateWalletUI(currentPrice);
-            
-            // System message in chat
-            appendMessage(`**EXECUTED:** Bought 10 shares of ${currentTicker} at $${currentPrice.toFixed(2)}.`, 'ai');
+            pendingTrade = { type: 'BUY', ticker: currentTicker, price: currentPrice, cost: cost };
+            modalTitle.textContent = "Confirm Purchase";
+            modalAsset.textContent = currentTicker;
+            modalAction.textContent = "BUY 10 Shares";
+            modalPrice.textContent = "$" + currentPrice.toFixed(2);
+            modalTotal.textContent = "$" + cost.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            modalBtnConfirm.textContent = "Confirm Purchase";
+            modalBtnConfirm.className = "m-btn m-btn-confirm";
+            tradeModal.style.display = 'flex';
         } else {
             alert("Insufficient Buying Power!");
         }
@@ -107,15 +162,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (portfolio[currentTicker] && portfolio[currentTicker].shares >= 10) {
             const revenue = currentPrice * 10;
-            walletBalance += revenue;
-            portfolio[currentTicker].shares -= 10;
-            
-            if (portfolio[currentTicker].shares === 0) {
-                delete portfolio[currentTicker];
-            }
-            
-            updateWalletUI(currentPrice);
-            appendMessage(`**EXECUTED:** Sold 10 shares of ${currentTicker} at $${currentPrice.toFixed(2)}.`, 'ai');
+            pendingTrade = { type: 'SELL', ticker: currentTicker, price: currentPrice, cost: revenue };
+            modalTitle.textContent = "Confirm Sale";
+            modalAsset.textContent = currentTicker;
+            modalAction.textContent = "SELL 10 Shares";
+            modalPrice.textContent = "$" + currentPrice.toFixed(2);
+            modalTotal.textContent = "$" + revenue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            modalBtnConfirm.textContent = "Confirm Sale";
+            modalBtnConfirm.className = "m-btn m-btn-confirm sell-mode";
+            tradeModal.style.display = 'flex';
         } else {
             alert("You don't own enough shares to sell!");
         }
