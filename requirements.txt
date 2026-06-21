@@ -5,3 +5,6 @@ scikit-learn
 google-generativeai
 gunicorn
 python-dotenv
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug

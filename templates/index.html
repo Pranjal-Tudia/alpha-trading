@@ -17,14 +17,22 @@
 
     <div class="app-container">
         <!-- Minimal Top Bar -->
-        <header class="top-bar">
-            <div class="logo"><i class="fa-solid fa-layer-group" style="color: var(--accent-cyan);"></i> ALPHA TRADING</div>
+        <header class="header">
+        <div class="logo">
+            <i class="fas fa-layer-group"></i>
+            <span>ALPHA TRADER</span>
+        </div>
+        <div class="header-nav">
+            <span style="color: var(--text-secondary); margin-right: 1rem;"><i class="fas fa-user-circle"></i> {{ user.username }}</span>
+            <a href="{{ url_for('logout') }}" style="color: #f87171; text-decoration: none; font-weight: 600;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </header>
             
             <!-- Paper Trading Wallet -->
             <div class="paper-wallet">
                 <div class="wallet-stat">
                     <span class="label">Buying Power</span>
-                    <span class="value" id="wallet-balance">$100,000.00</span>
+                    <span class="value" id="wallet-balance">${{ "{:,.2f}".format(portfolio.cash) }}</span>
                 </div>
                 <div class="wallet-stat">
                     <span class="label">Open P&L</span>
@@ -227,6 +235,8 @@
         window.ALL_CHART_DATES = {{ data.chart_dates | tojson }};
         window.ALL_CHART_PRICES = {{ data.chart_prices | tojson }};
         window.INITIAL_NEWS = {{ data.news | tojson if data.news else '[]' }};
+        window.INITIAL_WALLET = {{ user.wallet_balance }};
+        window.INITIAL_PORTFOLIO = {{ portfolio | tojson }};
     </script>
     <script src="{{ url_for('static', filename='script.js') }}?v=2"></script>
 </body>

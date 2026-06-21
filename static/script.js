@@ -39,21 +39,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const newsList = document.getElementById('news-list');
     const dashSentiment = document.getElementById('dash-sentiment');
 
-    // Portfolio State
-    let walletBalance = 100000.00;
-    let portfolio = {}; // format: { 'AAPL': { shares: 10, avgPrice: 150.00 } }
+    // Portfolio State (Loaded from Server)
+    let walletBalance = window.INITIAL_WALLET || 100000.00;
+    let portfolio = window.INITIAL_PORTFOLIO || {}; 
 
-    const savedWallet = localStorage.getItem('alpha_wallet_balance');
-    if (savedWallet !== null) walletBalance = parseFloat(savedWallet);
-    
-    const savedPortfolio = localStorage.getItem('alpha_portfolio');
-    if (savedPortfolio !== null) portfolio = JSON.parse(savedPortfolio);
-
-    function saveWalletState() {
-        localStorage.setItem('alpha_wallet_balance', walletBalance.toString());
-        localStorage.setItem('alpha_portfolio', JSON.stringify(portfolio));
-    }
-    
     const walletBalanceEl = document.getElementById('wallet-balance');
     const walletPnlEl = document.getElementById('wallet-pnl');
     const holdingsInfoEl = document.getElementById('holdings-info');
@@ -104,33 +93,42 @@ document.addEventListener('DOMContentLoaded', () => {
         pendingTrade = null;
     });
 
-    modalBtnConfirm.addEventListener('click', () => {
+    modalBtnConfirm.addEventListener('click', async () => {
         if (!pendingTrade) return;
         
         const { type, ticker, price, cost } = pendingTrade;
+        const originalText = modalBtnConfirm.textContent;
+        modalBtnConfirm.textContent = "Processing...";
+        modalBtnConfirm.disabled = true;
         
-        if (type === 'BUY') {
-            walletBalance -= cost;
-            if (!portfolio[ticker]) portfolio[ticker] = { shares: 0, avgPrice: 0 };
+        try {
+            const response = await fetch('/api/trade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: type, ticker: ticker, price: price, shares: 10 })
+            });
+            const data = await response.json();
             
-            const pos = portfolio[ticker];
-            const totalCost = (pos.shares * pos.avgPrice) + cost;
-            pos.shares += 10;
-            pos.avgPrice = totalCost / pos.shares;
-            
-            appendMessage(`**EXECUTED:** Bought 10 shares of ${ticker} at $${price.toFixed(2)}.`, 'ai');
-        } else if (type === 'SELL') {
-            walletBalance += cost; // Revenue
-            portfolio[ticker].shares -= 10;
-            if (portfolio[ticker].shares === 0) delete portfolio[ticker];
-            
-            appendMessage(`**EXECUTED:** Sold 10 shares of ${ticker} at $${price.toFixed(2)}.`, 'ai');
+            if (response.ok) {
+                // Update local state from server truth
+                walletBalance = data.wallet_balance;
+                portfolio = data.portfolio;
+                updateWalletUI(price);
+                appendMessage(`**EXECUTED:** ${data.message}`, 'ai');
+                tradeModal.style.display = 'none';
+            } else {
+                alert(`Trade Failed: ${data.error}`);
+            }
+        } catch (error) {
+            alert(`Error processing trade: ${error}`);
+        } finally {
+            modalBtnConfirm.textContent = originalText;
+            modalBtnConfirm.disabled = false;
+            pendingTrade = null;
+            if (!tradeModal.style.display || tradeModal.style.display === 'none') {
+                tradeModal.style.display = 'none';
+            }
         }
-        
-        saveWalletState();
-        updateWalletUI(price);
-        tradeModal.style.display = 'none';
-        pendingTrade = null;
     });
 
     // Trade Buttons
