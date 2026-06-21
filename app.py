@@ -43,6 +43,7 @@ def load_user(user_id):
     return User.query.get(int(user_id))
 
 # Create database tables for Gunicorn deployment
+os.makedirs('instance', exist_ok=True)
 with app.app_context():
     db.create_all()
 
