@@ -5,10 +5,12 @@ import numpy as np
 import yfinance as yf
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import train_test_split
 from flask import Flask, render_template, request, jsonify, redirect, url_for, flash
 import google.generativeai as genai
 from dotenv import load_dotenv
 from flask_sqlalchemy import SQLAlchemy
+import requests
 from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -57,9 +59,12 @@ def init_trading_bot(ticker_symbol):
     TICKER = ticker_symbol.upper()
     print(f"Initializing Trading Bot for {TICKER}...")
     
-    data = yf.download(TICKER, period='5y', interval='1d')
+    session = requests.Session()
+    session.headers['User-agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    
+    data = yf.download(TICKER, period='5y', interval='1d', session=session)
     if data.empty:
-        raise ValueError(f"No data found for {TICKER}. It might be delisted or invalid.")
+        raise ValueError(f"Yahoo Finance blocked the download or returned no data for {TICKER}.")
 
     if isinstance(data.columns, pd.MultiIndex):
         data.columns = [col[0] for col in data.columns]
@@ -176,8 +181,13 @@ def logout():
 @app.route('/')
 @login_required
 def home():
+    error_message = None
     if not LATEST_DATA:
-        init_trading_bot(TICKER)
+        try:
+            init_trading_bot(TICKER)
+        except Exception as e:
+            error_message = f"Critical Error starting trading bot: {str(e)}"
+            return f"<h1>Server Error</h1><p>{error_message}</p><a href='/logout'>Click here to Logout and clear your session</a>"
         
     # Get user's portfolio and format it for JS
     user_portfolio = PortfolioItem.query.filter_by(user_id=current_user.id).all()
