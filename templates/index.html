@@ -17,16 +17,11 @@
 
     <div class="app-container">
         <!-- Minimal Top Bar -->
-        <header class="header">
-        <div class="logo">
-            <i class="fas fa-layer-group"></i>
-            <span>ALPHA TRADER</span>
-        </div>
-        <div class="header-nav">
-            <span style="color: var(--text-secondary); margin-right: 1rem;"><i class="fas fa-user-circle"></i> {{ user.username }}</span>
-            <a href="{{ url_for('logout') }}" style="color: #f87171; text-decoration: none; font-weight: 600;"><i class="fas fa-sign-out-alt"></i> Logout</a>
-        </div>
-    </header>
+        <header class="top-bar">
+            <div class="logo">
+                <i class="fas fa-layer-group"></i>
+                <span>ALPHA TRADER</span>
+            </div>
             
             <!-- Paper Trading Wallet -->
             <div class="paper-wallet">
@@ -37,6 +32,10 @@
                 <div class="wallet-stat">
                     <span class="label">Open P&L</span>
                     <span class="value pnl-neutral" id="wallet-pnl">$0.00</span>
+                </div>
+                <div class="wallet-stat">
+                    <span class="label">User</span>
+                    <span class="value" style="font-size:1rem; color:var(--text-secondary);">{{ user.username }} <a href="{{ url_for('logout') }}" style="color: #ef4444; margin-left: 10px;" title="Logout"><i class="fas fa-power-off"></i></a></span>
                 </div>
             </div>
         </header>
